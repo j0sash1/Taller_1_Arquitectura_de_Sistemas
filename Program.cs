@@ -10,6 +10,7 @@ using Shortly.Endpoints;
 using Shortly.Infrastructure;
 using Shortly.Infrastructure.Persistence;
 using Shortly.Infrastructure.Repositories;
+using Shortly.Middleware;
 
 // Creates the ASP.NET Core application builder with initial configuration
 var builder = WebApplication.CreateBuilder(args);
@@ -92,6 +93,13 @@ app.UseStaticFiles();
 
 // Enables request routing
 app.UseRouting();
+
+// HSTS -> forces HTTPS
+// X-Frame-Options -> clickjacking
+// X-Content-Type-Options -> MIME sniffing
+// Referrer-Policy -> information leakage
+// Permissions-Policy -> disables browser features
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // Enables authentication (must come after UseRouting)
 app.UseAuthentication();
