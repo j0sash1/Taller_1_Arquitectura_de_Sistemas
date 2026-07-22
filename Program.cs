@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
@@ -11,6 +12,7 @@ using Shortly.Infrastructure;
 using Shortly.Infrastructure.Persistence;
 using Shortly.Infrastructure.Repositories;
 using Shortly.Middleware;
+using System.Threading.RateLimiting;
 
 // Creates the ASP.NET Core application builder with initial configuration
 var builder = WebApplication.CreateBuilder(args);
@@ -70,6 +72,30 @@ builder.Services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>>(sp
 // Registers the authorization service
 builder.Services.AddAuthorization();
 
+// Configures a fixed-window rate limiting policy
+// The policy is applied to the Razor Pages endpoint group to reduce
+// abusive request rates and returns HTTP 429 with Retry-After when exceeded
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddFixedWindowLimiter("login", policy =>
+    {
+        policy.PermitLimit = 10;
+        policy.Window = TimeSpan.FromMinutes(5);
+        policy.QueueLimit = 0;
+        policy.AutoReplenishment = true;
+    });
+
+    options.OnRejected = async (context, _) =>
+    {
+        context.HttpContext.Response.Headers.RetryAfter = "300";
+
+        await context.HttpContext.Response.WriteAsync(
+            "Too many requests. Please try again later.");
+    };
+});
+
 // Registers repositories and services for dependency injection (scoped lifetime)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILinkRepository, LinkRepository>();
@@ -94,6 +120,9 @@ app.UseStaticFiles();
 // Enables request routing
 app.UseRouting();
 
+// Enables the ASP.NET Core rate limiting middleware
+app.UseRateLimiter();
+
 // Adds baseline security headers to every HTTP response.
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
@@ -109,8 +138,10 @@ app.UseAuthorization();
 // Maps static assets with automatic versioning
 app.MapStaticAssets();
 
-// Maps Razor Pages with static asset support
-app.MapRazorPages().WithStaticAssets();
+// Maps Razor Pages and enforces the "login" rate limiting policy
+app.MapRazorPages()
+    .RequireRateLimiting("login")
+    .WithStaticAssets();
 
 // Exposes the OpenAPI document at /openapi/v1.json
 app.MapOpenApi();
