@@ -94,12 +94,11 @@ app.UseStaticFiles();
 // Enables request routing
 app.UseRouting();
 
-// HSTS -> forces HTTPS
-// X-Frame-Options -> clickjacking
-// X-Content-Type-Options -> MIME sniffing
-// Referrer-Policy -> information leakage
-// Permissions-Policy -> disables browser features
+// Adds baseline security headers to every HTTP response.
 app.UseMiddleware<SecurityHeadersMiddleware>();
+
+// Measures request execution time for diagnostics.
+app.UseMiddleware<ResponseTimingMiddleware>();
 
 // Enables authentication (must come after UseRouting)
 app.UseAuthentication();
