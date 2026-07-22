@@ -8,11 +8,15 @@ public class LinkResponse
     public string Url { get; init; } = null!;
     public string ShortUrl { get; init; } = null!;
     public int Clicks { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime UpdatedAt { get; init; }
     public static LinkResponse From(Link link) => new()
     {
         Id = link.Id,
         Url = link.Url,
         ShortUrl = link.ShortUrl,
-        Clicks = link.Clicks
+        Clicks = link.Clicks,
+        CreatedAt = link.CreatedAt,
+        UpdatedAt = link.UpdatedAt
     };
 }

@@ -21,6 +21,16 @@ public class Link
 
     [Required] public int Clicks { get; private set; }
 
+    [Required]
+    public DateTime CreatedAt { get; private set; }
+
+    /// <summary>
+    /// Stores the last time the link state was modified.
+    /// Used to generate the HTTP Last-Modified header for conditional requests.
+    /// </summary>
+    [Required]
+    public DateTime UpdatedAt { get; private set; }
+
     [ForeignKey(nameof(User))]
     public long UserId { get; private set; }
 
@@ -45,8 +55,16 @@ public class Link
             : throw new ArgumentOutOfRangeException(nameof(userId), "UserId must be greater than zero.");
 
         Clicks = 0;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
     }
 
-    public void IncrementClicks() => Clicks++;
+    /// <summary>
+    /// Increments the click counter and updates the modification timestamp.
+    /// </summary>
+    public void IncrementClicks()
+    {
+         Clicks++;
+    }
 
 }
