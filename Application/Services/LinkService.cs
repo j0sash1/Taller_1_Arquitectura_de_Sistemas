@@ -1,6 +1,7 @@
 using Shortly.Application.DTOs;
 using Shortly.Application.Interfaces;
 using Shortly.Domain.Entities;
+using Shortly.Infrastructure;
 
 namespace Shortly.Application.Services;
 
@@ -19,7 +20,7 @@ public sealed class LinkService : ILinkService
     {
         _logger.LogDebug("Creating link for URL: {Url} and userId: {UserId}", url, userId);
 
-        var shortUrl = Ulid.NewUlid().ToString()[..12].ToLowerInvariant();
+        var shortUrl = ShortCodeGenerator.Generate();
         var link = new Link(url, shortUrl, userId);
 
         await _linkRepository.AddAsync(link);
