@@ -10,6 +10,7 @@ public class LinkResponse
     public int Clicks { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
+    public DateTime? ExpiresAt { get; init; }
     public static LinkResponse From(Link link) => new()
     {
         Id = link.Id,
@@ -17,6 +18,7 @@ public class LinkResponse
         ShortUrl = link.ShortUrl,
         Clicks = link.Clicks,
         CreatedAt = link.CreatedAt,
-        UpdatedAt = link.UpdatedAt
+        UpdatedAt = link.UpdatedAt,
+        ExpiresAt = link.ExpiresAt
     };
 }
