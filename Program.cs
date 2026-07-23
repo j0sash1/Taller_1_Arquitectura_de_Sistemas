@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
@@ -12,6 +13,7 @@ using Shortly.Infrastructure;
 using Shortly.Infrastructure.Persistence;
 using Shortly.Infrastructure.Repositories;
 using Shortly.Middleware;
+using System.IO.Compression;
 using System.Threading.RateLimiting;
 
 // Creates the ASP.NET Core application builder with initial configuration
@@ -95,6 +97,31 @@ builder.Services.AddRateLimiter(options =>
             "Too many requests. Please try again later.");
     };
 });
+// Configures Brotli (preferred) and Gzip to reduce response payloads.
+builder.Services.AddResponseCompression(options =>
+{
+    // Enabled for HTTPS: Safe in this app because it doesn't reflect 
+    // dynamic secrets (mitigating BREACH-style attacks).
+    options.EnableForHttps = true;
+
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+
+    // Compresses text/JSON only. Ignores binary formats (images, fonts) 
+    // that are already compressed to prevent wasting CPU.
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes;
+});
+
+// "Fastest" level minimizes CPU usage per request, ideal for low-traffic apps.
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
 
 // Registers repositories and services for dependency injection (scoped lifetime)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -113,6 +140,9 @@ if (!app.Environment.IsDevelopment())
 
 // Redirects HTTP requests to HTTPS automatically
 // app.UseHttpsRedirection();
+
+// Enables compression. Must run before the middlewares that write the response body.
+app.UseResponseCompression();
 
 // Serves static files from the wwwroot/ folder
 app.UseStaticFiles();
