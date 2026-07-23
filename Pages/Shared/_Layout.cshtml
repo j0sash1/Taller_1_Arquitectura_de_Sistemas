@@ -4,6 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Shortly</title>
+
+    <!-- Preloads critical stylesheets to prioritize download -->
+    <link rel="preload"
+          href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css"
+          as="style" />
+
+    <link rel="preload"
+          href="~/css/site.css"
+          as="style"
+          asp-append-version="true" />
+
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
