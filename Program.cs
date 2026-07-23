@@ -97,22 +97,36 @@ builder.Services.AddRateLimiter(options =>
             "Too many requests. Please try again later.");
     };
 });
-// Configures Brotli (preferred) and Gzip to reduce response payloads.
+
+// Enables response compression with Brotli and Gzip.
+// HTTP allows a client to advertise the codecs it understands via
+// Accept-Encoding; the server picks one, compresses the body, and reports
+// the choice in Content-Encoding. This shrinks compressible payloads
+// (HTML pages, JSON, CSS, JS) and reduces transfer time, especially on
+// slow connections. Brotli is preferred (better ratio); Gzip is kept as a
+// fallback for clients that only support it.
 builder.Services.AddResponseCompression(options =>
 {
-    // Enabled for HTTPS: Safe in this app because it doesn't reflect 
-    // dynamic secrets (mitigating BREACH-style attacks).
+    // Response compression is disabled for HTTPS by default because mixing
+    // dynamic, secret-bearing content (e.g. reflected tokens) with
+    // compression can leak information through response-size side channels
+    // (the BREACH-style attack). Shortly does not reflect secrets in its
+    // compressible responses, so it is safe to enable it here.
     options.EnableForHttps = true;
 
     options.Providers.Add<BrotliCompressionProvider>();
     options.Providers.Add<GzipCompressionProvider>();
 
-    // Compresses text/JSON only. Ignores binary formats (images, fonts) 
-    // that are already compressed to prevent wasting CPU.
+    // Reuses the framework's default MIME type allow-list (text/*,
+    // application/json, application/xml, image/svg+xml, etc.). Binary
+    // formats such as images or fonts are intentionally left out: they are
+    // already compressed, so re-compressing them wastes CPU with no
+    // bandwidth benefit.
     options.MimeTypes = ResponseCompressionDefaults.MimeTypes;
 });
 
-// "Fastest" level minimizes CPU usage per request, ideal for low-traffic apps.
+// "Fastest" trades a slightly larger payload for lower CPU usage per
+// request, which is the right default for a low-traffic app like Shortly.
 builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 {
     options.Level = CompressionLevel.Fastest;
@@ -121,6 +135,19 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 {
     options.Level = CompressionLevel.Fastest;
+});
+
+// Restrictive CORS policy: only allows the trusted client origin to
+// call this API cross-origin. Everything else is blocked by the browser.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ShortlyClient", policy =>
+    {
+        // Replace with the real frontend origin in production.
+        policy.WithOrigins("http://localhost:3000")
+              .WithMethods("GET")
+              .WithHeaders("Content-Type");
+    });
 });
 
 // Registers repositories and services for dependency injection (scoped lifetime)
@@ -141,7 +168,10 @@ if (!app.Environment.IsDevelopment())
 // Redirects HTTP requests to HTTPS automatically
 // app.UseHttpsRedirection();
 
-// Enables compression. Must run before the middlewares that write the response body.
+// Applies response compression (see AddResponseCompression above). Must run
+// early in the pipeline, before the middleware that actually writes the
+// response body (static files, Razor Pages, minimal API endpoints), so it
+// can wrap and compress whatever they produce.
 app.UseResponseCompression();
 
 // Serves static files from the wwwroot/ folder
@@ -149,6 +179,10 @@ app.UseStaticFiles();
 
 // Enables request routing
 app.UseRouting();
+
+// Enables CORS. Must go after UseRouting and before UseAuthorization.
+// The policy itself is applied per-endpoint (see RequireCors), not here.
+app.UseCors();
 
 // Enables the ASP.NET Core rate limiting middleware
 app.UseRateLimiter();

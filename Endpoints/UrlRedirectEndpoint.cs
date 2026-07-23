@@ -58,6 +58,9 @@ public static class UrlRedirectEndpoint
             {
                 return Results.NotFound();
             }
-        });
+        })
+        // Only the "ShortlyClient" origin (Program.cs) can call this
+        // endpoint cross-origin; the browser blocks everyone else.
+        .RequireCors("ShortlyClient");
     }
 }
