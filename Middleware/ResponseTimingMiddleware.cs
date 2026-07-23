@@ -23,12 +23,16 @@ public class ResponseTimingMiddleware
     {
         var sw = Stopwatch.StartNew();
 
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers["X-Response-Time"] =
+                $"{sw.ElapsedMilliseconds}ms";
+            return Task.CompletedTask;
+        });
+
         await _next(context);
 
         sw.Stop();
-
-        context.Response.Headers["X-Response-Time"] =
-            $"{sw.ElapsedMilliseconds}ms";
 
         if (sw.ElapsedMilliseconds > 500)
         {
