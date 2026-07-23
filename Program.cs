@@ -28,7 +28,15 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Registers Razor Pages services
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(options =>
+{
+    // Applies the "login" rate limiting policy (see AddRateLimiter below)
+    // only to the Login page, not to every Razor Page.
+    options.Conventions.AddPageApplicationModelConvention("/Login", model =>
+    {
+        model.EndpointMetadata.Add(new EnableRateLimitingAttribute("login"));
+    });
+});
 
 // Registers the OpenAPI document generator with version 3.1 and API metadata
 builder.Services.AddOpenApi(options =>
@@ -213,9 +221,9 @@ app.UseAuthorization();
 // Maps static assets with automatic versioning
 app.MapStaticAssets();
 
-// Maps Razor Pages and enforces the "login" rate limiting policy
+// Maps Razor Pages. The "login" rate limiting policy is scoped to just
+// the Login page via the AddPageApplicationModelConvention above.
 app.MapRazorPages()
-    .RequireRateLimiting("login")
     .WithStaticAssets();
 
 // Exposes the OpenAPI document at /openapi/v1.json
