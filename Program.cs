@@ -60,6 +60,17 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Login";
         options.AccessDeniedPath = "/Error";
+
+        // Cookie hardening: HttpOnly hides the cookie from JS (blocks theft
+        // via XSS); SameSite=Strict never sends it on cross-site requests
+        // (blocks CSRF); Secure requires HTTPS in production so it can't be
+        // read over plain HTTP.
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.Path = "/";
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
     });
 
 // Injects the ticket store into the cookie options after the service provider is built
