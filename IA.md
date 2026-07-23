@@ -53,6 +53,10 @@ A continuación, la lista de prompts y consultas utilizadas, en orden cronológi
 * "ya lo arregle y saque los datos nuevos. me ayudas a comparar los resultados del before y el after para entender q mejoro y analizar q significan estos resultados?"
 * "por ultimo, armame el commit de esto"
 
+## 9. Bonus — Health check y crawler control (ítems 14 y 15)
+* "indicame que tengo que hacer en el item 14 y 15"
+* "esto es lo que hice, ayudame a revisar si todo funciona bien"
+* "dame los commits para subirlo"
 ---
 
 ### Resumen de uso
