@@ -169,6 +169,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Registers the ASP.NET Core Health Checks service, used by /health (item 14).
+builder.Services.AddHealthChecks();
+
 // Registers repositories and services for dependency injection (scoped lifetime)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILinkRepository, LinkRepository>();
@@ -234,6 +237,12 @@ app.MapOpenApi();
 
 // Serves the Scalar interactive API reference UI at /scalar/v1
 app.MapScalarApiReference();
+
+// Maps GET /health with JSON status and uptime (item 14)
+app.MapHealthCheck();
+
+// Maps GET /robots.txt and GET /sitemap.xml (item 15)
+app.MapCrawlerEndpoints();
 
 // Maps the redirect endpoint GET /{shortUrl} from Endpoints/UrlRedirectEndpoint.cs
 app.MapUrlRedirect();
