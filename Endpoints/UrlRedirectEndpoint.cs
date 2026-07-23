@@ -16,6 +16,17 @@ public static class UrlRedirectEndpoint
             string shortUrl,
             ILinkService linkService) =>
         {
+            // Problem Details (RFC 7807) returns a machine-readable JSON
+            // error body (title/status/detail) instead of plain text, so
+            // API clients can parse every error the same way.
+            if (string.IsNullOrWhiteSpace(shortUrl) || shortUrl.Length > 32)
+            {
+                return Results.Problem(
+                    title: "Invalid short code",
+                    detail: "The short code must be between 1 and 32 characters.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
             try
             {
                 var link = await linkService.GetLink(shortUrl);
@@ -28,7 +39,7 @@ public static class UrlRedirectEndpoint
                 context.Response.Headers.LastModified =
                     link.UpdatedAt.ToUniversalTime().ToString("R");
 
-                
+                // Check if the client has a cached version of the resource.
                 var ifNoneMatch = context.Request.Headers.IfNoneMatch.ToString();
 
                 // Return 304 when the client already has the latest representation.
@@ -56,7 +67,10 @@ public static class UrlRedirectEndpoint
             }
             catch (KeyNotFoundException)
             {
-                return Results.NotFound();
+                return Results.Problem(
+                    title: "Short link not found",
+                    detail: $"No link found for short code '{shortUrl}'.",
+                    statusCode: StatusCodes.Status404NotFound);
             }
         })
         // Only the "ShortlyClient" origin (Program.cs) can call this
