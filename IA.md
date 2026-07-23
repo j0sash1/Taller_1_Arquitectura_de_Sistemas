@@ -64,3 +64,48 @@ Debido a la falta de conocimiento previo en varias de las tecnologías y concept
 * **Troubleshooting y resolución de bugs:** Explicar el origen de errores técnicos complejos (como el choque entre el middleware del compañero y la compresión) y dar la solución paso a paso.
 * **Manejo de Git:** Redactar todos los mensajes de commit en inglés siguiendo el estándar del proyecto.
 * **Análisis de Benchmarks:** Ayudar a instalar las herramientas de medición, explicar qué significaban las métricas obtenidas y redactar la comparativa técnica final.
+
+## Prompts de Jorge (ítems 1–5 y 11–12)
+**Herramienta utilizada:** ChatGPT (OpenAI), vía chat web.
+**Alcance:** Validación de la implementación de los ítems 1–5 y 11–12 (Core HTTP Protocol Improvements), resolución de errores y apoyo para pruebas.
+
+## 1. Ítem 1 — Security headers
+* "¿Cómo implemento los security headers en ASP.NET Core?"
+* "¿Qué headers son los recomendados y para qué sirve cada uno?"
+* "¿Cómo puedo comprobar con curl que los headers realmente se están enviando?"
+
+## 2. Ítem 2 — Response timing
+* "¿Qué middleware debería crear para agregar un header X-Response-Time?"
+* "¿Cómo puedo validar que el tiempo de respuesta se está enviando correctamente?"
+
+## 3. Ítem 3 — Cookie-backed authentication
+* "¿Cómo inicio sesión utilizando CookieAuthentication?"
+* "¿Cómo protejo las páginas que requieren autenticación?"
+* "¿Está bien configurado el Login y Logout?"
+* "¿Cómo puedo comprobar que la cookie se crea correctamente?"
+
+## 4. Ítem 4 — Server-side session storage
+* "¿Qué significa utilizar un SessionStore para las cookies?"
+* "¿Cómo implemento un TicketStore en memoria?"
+
+## 5. Ítem 5 — Rate limiting
+* "¿Cómo verifico que devuelve HTTP 429 y Retry-After?"
+
+## 6. Ítem 11 — HTTP/2 server push analysis + preload
+* "¿Qué debería escribir en el documento http2-preload-analysis.md?"
+
+## 7. Ítem 12 — Request tracing (X-Request-Id)
+* "¿Cómo hago para reutilizar el Request ID si el cliente ya lo envía?"
+* "¿Cómo agrego el RequestId al contexto de Serilog?"
+* "¿Cómo modifico el outputTemplate para que aparezca el RequestId?"
+* "¿Cómo puedo comprobar que el mismo RequestId aparece en los logs y en la respuesta HTTP?"
+
+---
+
+### Resumen de uso
+La IA fue utilizada principalmente como una herramienta de apoyo para comprender conceptos de ASP.NET Core y aplicar correctamente las funcionalidades solicitadas por el taller.
+
+* **Comprensión de conceptos:** Explicar el funcionamiento de middlewares, autenticación basada en cookies, SessionStore, Rate Limiter, Request Tracing y Preload de recursos.
+* **Revisión del código:** Verificar que las implementaciones cumplieran con los requisitos del enunciado antes de realizar las pruebas.
+* **Resolución de errores:** Ayudar a identificar problemas de configuración, errores de compilación y conflictos surgidos durante la integración con cambios realizados por el compañero.
+* **Validación de funcionamiento:** Proporcionar comandos (`curl`) y procedimientos para comprobar el correcto funcionamiento de headers, autenticación, rate limiting, preload y request tracing.

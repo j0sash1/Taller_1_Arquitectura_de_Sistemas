@@ -206,6 +206,9 @@ app.UseCors();
 // Enables the ASP.NET Core rate limiting middleware
 app.UseRateLimiter();
 
+// Creates or propagates a request identifier for request tracing.
+app.UseMiddleware<RequestTracingMiddleware>();
+
 // Adds baseline security headers to every HTTP response.
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
