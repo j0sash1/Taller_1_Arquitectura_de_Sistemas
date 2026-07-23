@@ -31,6 +31,17 @@ public static class UrlRedirectEndpoint
             {
                 var link = await linkService.GetLink(shortUrl);
 
+                // An expired link is gone for good (until someone resets it),
+                // so 410 is more accurate than 404 and tells clients to stop
+                // retrying/caching it.
+                if (link.ExpiresAt is not null && link.ExpiresAt <= DateTime.UtcNow)
+                {
+                    return Results.Problem(
+                        title: "Short link expired",
+                        detail: $"The short code '{shortUrl}' expired on {link.ExpiresAt:u}.",
+                        statusCode: StatusCodes.Status410Gone);
+                }
+
                 // Generates a validator representing the current state of the link.
                 var etag = $"\"{link.ShortUrl}-{link.CreatedAt.Ticks}\"";
 
@@ -39,7 +50,7 @@ public static class UrlRedirectEndpoint
                 context.Response.Headers.LastModified =
                     link.UpdatedAt.ToUniversalTime().ToString("R");
 
-                // Check if the client has a cached version of the resource.
+                
                 var ifNoneMatch = context.Request.Headers.IfNoneMatch.ToString();
 
                 // Return 304 when the client already has the latest representation.
@@ -63,6 +74,22 @@ public static class UrlRedirectEndpoint
 
                 await linkService.IncrementClicks(link.Id);
 
+                // 301/307/308 tell clients/caches how long they can trust
+                // this redirect; a fixed 302 forces re-checking every time.
+                if (link.ExpiresAt is not null)
+                {
+                    // Temporary link: 307 keeps the request method and
+                    // signals the target may change before it expires.
+                    return Results.Redirect(link.Url, permanent: false, preserveMethod: true);
+                }
+
+                if (link.Clicks > 100)
+                {
+                    // Popular, stable link: safe to cache long-term.
+                    return Results.Redirect(link.Url, permanent: true);
+                }
+
+                // Default: not enough history yet, cache conservatively.
                 return Results.Redirect(link.Url);
             }
             catch (KeyNotFoundException)

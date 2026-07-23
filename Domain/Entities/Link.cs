@@ -31,6 +31,12 @@ public class Link
     [Required]
     public DateTime UpdatedAt { get; private set; }
 
+    /// <summary>
+    /// Optional expiration date. Null means the link never expires.
+    /// Used to decide between 301/307/302 on redirect.
+    /// </summary>
+    public DateTime? ExpiresAt { get; private set; }
+
     [ForeignKey(nameof(User))]
     public long UserId { get; private set; }
 
@@ -65,6 +71,16 @@ public class Link
     public void IncrementClicks()
     {
          Clicks++;
+    }
+
+    /// <summary>
+    /// Marks this link as temporary/expiring on the given date.
+    /// Pass null to make it a permanent link again.
+    /// </summary>
+    public void SetExpiration(DateTime? expiresAt)
+    {
+        ExpiresAt = expiresAt;
+        UpdatedAt = DateTime.UtcNow;
     }
 
 }
